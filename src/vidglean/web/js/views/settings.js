@@ -1,6 +1,11 @@
 import { api, TOKEN } from '../api.js';
 import { el, errorToast, fmtSize, modal, toast } from '../ui.js';
 
+// 模型/凭证变化后，让侧边栏底部与首页提示重新读一次 health
+function notifyHealth() {
+  window.dispatchEvent(new CustomEvent('vg:health-changed'));
+}
+
 async function saveSettings(values) {
   const data = await api.put('/api/settings', { values });
   if (values.theme) {
@@ -141,6 +146,7 @@ function modelDialog(existing, onSaved) {
                 await api.post('/api/models', payload);
               }
               handle.close();
+              notifyHealth();
               onSaved();
             } catch (error) {
               errorToast(error);
@@ -184,6 +190,7 @@ async function modelsTab() {
                     try {
                       await api.post(`/api/models/${item.id}/current`, {});
                       toast('已切换模型');
+                      notifyHealth();
                       rerender();
                     } catch (error) {
                       errorToast(error);
@@ -217,6 +224,7 @@ async function modelsTab() {
                 if (!window.confirm(`删除模型「${item.name}」？`)) return;
                 try {
                   await api.del(`/api/models/${item.id}`);
+                  notifyHealth();
                   rerender();
                 } catch (error) {
                   errorToast(error);
@@ -389,6 +397,7 @@ async function bilibiliTab() {
               input.value = '';
               status.textContent = '已配置';
               toast('凭证已保存');
+              notifyHealth();
             } catch (error) {
               errorToast(error);
             }
@@ -406,6 +415,7 @@ async function bilibiliTab() {
               await api.del('/api/bilibili/credential');
               status.textContent = '未配置';
               toast('已清除');
+              notifyHealth();
             } catch (error) {
               errorToast(error);
             }
