@@ -1,7 +1,10 @@
 // HTTP 客户端与 SSE 解析
 const params = new URLSearchParams(location.search);
-export const TOKEN = params.get('token') || '';
-if (params.has('token')) {
+const urlToken = params.get('token') || '';
+if (urlToken) sessionStorage.setItem('vg-token', urlToken);
+// 地址栏里的 token 用一次就抹掉；刷新页面时从 sessionStorage 取回
+export const TOKEN = urlToken || sessionStorage.getItem('vg-token') || '';
+if (urlToken) {
   history.replaceState(null, '', location.pathname + location.hash);
 }
 
