@@ -238,57 +238,37 @@ function tagDialog(doc, onDone) {
 
 async function categoryDialog(doc, onDone) {
   const data = await api.get('/api/categories');
-  const selected = new Set(doc.categories || []);
-  const box = el('div', {});
-  const list = el('div', {});
+  const current = (doc.categories || [])[0] || '';
 
-  if (!data.items.length) {
-    list.append(el('div', { class: 'muted small', style: 'padding:4px 0 8px' }, '还没有分类，可以直接在下面新建'));
-  }
-
-  const appendCategory = (item, checked) => {
-    const checkbox = el('input', { type: 'checkbox', checked });
-    checkbox.dataset.id = item.id;
-    list.append(el('label', { class: 'row', style: 'padding:6px 0' }, checkbox, item.name));
-    return checkbox;
-  };
-
-  for (const item of data.items) appendCategory(item, selected.has(item.id));
-
-  const newName = el('input', { class: 'field', placeholder: '新建分类名称' });
-  const create = async () => {
-    const name = newName.value.trim();
-    if (!name) return;
-    try {
-      const created = await api.post('/api/categories', { name });
-      appendCategory(created, true);
-      newName.value = '';
-      toast('分类已创建');
-    } catch (error) {
-      errorToast(error);
-    }
-  };
-  newName.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.isComposing) {
-      event.preventDefault();
-      create();
-    }
-  });
-
-  box.append(
-    list,
-    el(
-      'div',
-      { class: 'row', style: 'margin-top:12px;gap:8px' },
-      newName,
-      el('button', { class: 'btn small', onclick: create }, '新建'),
-    ),
+  const select = el(
+    'select',
+    { class: 'field' },
+    el('option', { value: '' }, '不归类'),
+    ...data.items.map((item) => el('option', { value: item.id }, item.name)),
+    el('option', { value: '__new__' }, '＋ 新建分类…'),
   );
+  select.value = current;
+
+  const newName = el('input', { class: 'field', placeholder: '输入新分类名称' });
+  const newRow = el('div', { class: 'hidden', style: 'margin-top:10px' }, newName);
+
+  const syncNewRow = () => {
+    const isNew = select.value === '__new__';
+    newRow.classList.toggle('hidden', !isNew);
+    if (isNew) setTimeout(() => newName.focus(), 30);
+  };
+  select.addEventListener('change', syncNewRow);
 
   const handle = modal({
     title: '归类',
     width: '440px',
-    body: box,
+    body: el(
+      'div',
+      {},
+      el('div', { class: 'muted small', style: 'margin-bottom:8px' }, '选择分类，或新建一个'),
+      select,
+      newRow,
+    ),
     footer: [
       el('button', { class: 'btn', onclick: () => handle.close() }, '取消'),
       el(
@@ -296,10 +276,17 @@ async function categoryDialog(doc, onDone) {
         {
           class: 'btn primary',
           onclick: async () => {
-            const ids = [...list.querySelectorAll('input[type=checkbox]')]
-              .filter((node) => node.checked)
-              .map((node) => node.dataset.id);
             try {
+              let ids = select.value && select.value !== '__new__' ? [select.value] : [];
+              if (select.value === '__new__') {
+                const name = newName.value.trim();
+                if (!name) {
+                  newName.focus();
+                  return;
+                }
+                const created = await api.post('/api/categories', { name });
+                ids = [created.id];
+              }
               await api.patch(`/api/documents/${doc.id}`, { categories: ids });
               handle.close();
               onDone();
@@ -308,10 +295,11 @@ async function categoryDialog(doc, onDone) {
             }
           },
         },
-        '保存',
+        '确认',
       ),
     ],
   });
+  syncNewRow();
 }
 
 function openChat(doc) {
@@ -510,6 +498,11 @@ export async function renderDoc(root, state, docId) {
   root.append(actions);
 
   const body = el('div', { class: 'doc-body', html: doc.html || '' });
+  // 页面顶部已经显示标题、元信息和原文链接，正文里重复的表头与一级标题不再渲染
+  const duplicatedHeader = body.querySelector(':scope > blockquote');
+  if (duplicatedHeader) duplicatedHeader.remove();
+  const duplicatedTitle = body.querySelector(':scope > h1');
+  if (duplicatedTitle) duplicatedTitle.remove();
   root.append(body);
   renderMath(body);
   body.querySelectorAll('a').forEach((link) => {
