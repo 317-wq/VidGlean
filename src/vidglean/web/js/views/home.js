@@ -106,17 +106,22 @@ export function openImportPanel() {
       }
       const checked = el('input', { type: 'checkbox', checked: true });
       const duplicate = Boolean(item.exists_document_id);
+      const thumb = el('div', { class: 'preview-thumb' });
+      if (item.cover_url) {
+        const image = el('img', {
+          src: `/api/image?url=${encodeURIComponent(item.cover_url)}`,
+          alt: '',
+          loading: 'lazy',
+        });
+        // 封面取不到就直接不显示，避免出现裂图
+        image.addEventListener('error', () => image.remove());
+        thumb.append(image);
+      }
       preview.append(
         el(
           'div',
           { class: 'preview-item' },
-          item.cover_url
-            ? el('img', {
-                src: `/api/image?url=${encodeURIComponent(item.cover_url)}`,
-                alt: item.title,
-                loading: 'lazy',
-              })
-            : el('div', { style: 'width:132px;height:78px;background:var(--panel-2);border-radius:6px' }),
+          thumb,
           el(
             'div',
             {},
