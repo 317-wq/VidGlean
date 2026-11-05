@@ -26,10 +26,22 @@ const STAGE_SHORT = {
   skipped: '跳过',
 };
 
+// 阶段简称固定下来：Markdown 生成简称 MD，不要用前两个字截断
+const STAGE_NAME = {
+  link_parse: '链接',
+  subtitle: '字幕',
+  ai_analyze: 'AI',
+  render_md: 'MD',
+};
+
 function stagePill(stage) {
-  const label = stage.label || stage.stage;
+  const label = STAGE_NAME[stage.stage] || stage.label || stage.stage;
   const text = STAGE_SHORT[stage.status] || stage.status;
-  return el('span', { class: `stage-pill ${stage.status}`, title: `${label}：${text}` }, label.slice(0, 2));
+  return el(
+    'span',
+    { class: `stage-pill ${stage.status}`, title: `${stage.label || stage.stage}：${text}` },
+    label,
+  );
 }
 
 function stageBar(stages) {
@@ -119,22 +131,26 @@ export async function renderTasks(root, state) {
       {},
       el(
         'td',
-        {},
+        { class: 'task-name' },
         task.document_id
-          ? el('a', { href: `#/doc/${task.document_id}` }, task.document_title || task.source_url)
-          : el('span', {}, task.source_url),
+          ? el(
+              'a',
+              { href: `#/doc/${task.document_id}`, title: task.document_title || task.source_url },
+              task.document_title || task.source_url,
+            )
+          : el('span', { title: task.source_url }, task.source_url),
         task.error_message ? el('div', { class: 'muted small' }, task.error_message) : null,
       ),
-      el('td', {}, statusBadge(task.status)),
+      el('td', { class: 'nowrap' }, statusBadge(task.status)),
       el('td', {}, stageBar(details[index])),
-      el('td', {}, `${task.retry_count || 0}`),
-      el('td', { class: 'muted small' }, fmtDate(task.updated_at)),
+      el('td', { class: 'nowrap' }, `${task.retry_count || 0}`),
+      el('td', { class: 'muted small nowrap' }, fmtDate(task.updated_at)),
       el(
         'td',
         {},
         el(
           'div',
-          { class: 'row' },
+          { class: 'row nowrap' },
           ...(ACTIONS[task.status] || []).map((action) =>
             el(
               'button',
@@ -159,7 +175,7 @@ export async function renderTasks(root, state) {
                 { class: 'btn small', onclick: () => (location.hash = `#/doc/${task.document_id}`) },
                 '打开文档',
               )
-            : el('button', { class: 'btn small', onclick: () => (location.hash = '#/home') }, '去导入'),
+            : null,
         ),
       ),
     ),
