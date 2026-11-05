@@ -10,7 +10,14 @@ from fastapi import APIRouter
 from vidglean import bootstrap, config, templates_builtin
 from vidglean.ai import client as ai_client
 from vidglean.api.common import ok
-from vidglean.api.schemas import CategoryIn, ModelIn, ModelPatch, SettingsIn, TemplateIn
+from vidglean.api.schemas import (
+    CategoryIn,
+    ModelIn,
+    ModelPatch,
+    SettingsIn,
+    TemplateIn,
+    TemplateUpdate,
+)
 from vidglean.core.errors import AppError, from_exception
 from vidglean.security import secrets as secret_store
 from vidglean.store import repo
@@ -106,6 +113,42 @@ def _template_payload(row: dict[str, Any]) -> dict[str, Any]:
 @router.get("/templates")
 async def list_templates() -> dict[str, Any]:
     return ok({"items": [_template_payload(row) for row in repo.list_templates()]})
+
+
+@router.get("/templates/{template_id}")
+async def template_detail(template_id: str) -> dict[str, Any]:
+    row = repo.get_template(template_id)
+    if row is None:
+        raise AppError("NOT_FOUND", "模板不存在", status=404)
+    payload = _template_payload(row)
+    payload["content"] = templates_builtin.template_text(row)
+    return ok(payload)
+
+
+@router.put("/templates/{template_id}")
+async def update_template(template_id: str, payload: TemplateUpdate) -> dict[str, Any]:
+    row = repo.get_template(template_id)
+    if row is None:
+        raise AppError("NOT_FOUND", "模板不存在", status=404)
+    if row["kind"] == "builtin":
+        raise AppError("CONFLICT", "内置模板不能直接修改，请另存为自定义模板")
+    errors = templates_builtin.validate(payload.content)
+    if errors:
+        raise AppError("BAD_TEMPLATE", "；".join(errors))
+    name = (payload.name or "").strip()
+    if name and name != row["name"]:
+        if repo.find_template_by_name(name):
+            raise AppError("CONFLICT", "模板名称已存在")
+        repo.update_template(template_id, name=name)
+    if payload.description is not None:
+        repo.update_template(template_id, description=payload.description.strip())
+    path = Path(row["path"]) if row["path"] else config.templates_dir() / f"{template_id}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(payload.content, "utf-8")
+    repo.update_template(template_id, path=str(path))
+    updated = repo.get_template(template_id)
+    assert updated is not None
+    return ok(_template_payload(updated))
 
 
 @router.post("/templates")
