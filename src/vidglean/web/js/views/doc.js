@@ -240,17 +240,54 @@ async function categoryDialog(doc, onDone) {
   const data = await api.get('/api/categories');
   const selected = new Set(doc.categories || []);
   const box = el('div', {});
+  const list = el('div', {});
+
   if (!data.items.length) {
-    box.append(el('div', { class: 'muted small' }, '还没有分类，请先在左侧新建'));
+    list.append(el('div', { class: 'muted small', style: 'padding:4px 0 8px' }, '还没有分类，可以直接在下面新建'));
   }
-  for (const item of data.items) {
-    const checkbox = el('input', { type: 'checkbox', checked: selected.has(item.id) });
+
+  const appendCategory = (item, checked) => {
+    const checkbox = el('input', { type: 'checkbox', checked });
     checkbox.dataset.id = item.id;
-    box.append(el('label', { class: 'row', style: 'padding:6px 0' }, checkbox, item.name));
-  }
+    list.append(el('label', { class: 'row', style: 'padding:6px 0' }, checkbox, item.name));
+    return checkbox;
+  };
+
+  for (const item of data.items) appendCategory(item, selected.has(item.id));
+
+  const newName = el('input', { class: 'field', placeholder: '新建分类名称' });
+  const create = async () => {
+    const name = newName.value.trim();
+    if (!name) return;
+    try {
+      const created = await api.post('/api/categories', { name });
+      appendCategory(created, true);
+      newName.value = '';
+      toast('分类已创建');
+    } catch (error) {
+      errorToast(error);
+    }
+  };
+  newName.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.isComposing) {
+      event.preventDefault();
+      create();
+    }
+  });
+
+  box.append(
+    list,
+    el(
+      'div',
+      { class: 'row', style: 'margin-top:12px;gap:8px' },
+      newName,
+      el('button', { class: 'btn small', onclick: create }, '新建'),
+    ),
+  );
+
   const handle = modal({
     title: '归类',
-    width: '420px',
+    width: '440px',
     body: box,
     footer: [
       el('button', { class: 'btn', onclick: () => handle.close() }, '取消'),
@@ -259,7 +296,7 @@ async function categoryDialog(doc, onDone) {
         {
           class: 'btn primary',
           onclick: async () => {
-            const ids = [...box.querySelectorAll('input[type=checkbox]')]
+            const ids = [...list.querySelectorAll('input[type=checkbox]')]
               .filter((node) => node.checked)
               .map((node) => node.dataset.id);
             try {
@@ -404,24 +441,29 @@ export async function renderDoc(root, state, docId) {
   );
   root.append(head);
 
+  const starButton = el(
+    'button',
+    {
+      class: 'btn small',
+      onclick: async () => {
+        const next = !doc.starred;
+        try {
+          await api.patch(`/api/documents/${doc.id}`, { starred: next });
+          doc.starred = next;
+          starButton.textContent = next ? '★ 取消星标' : '☆ 加星标';
+          toast(next ? '已加星标' : '已取消星标');
+        } catch (error) {
+          errorToast(error);
+        }
+      },
+    },
+    doc.starred ? '★ 取消星标' : '☆ 加星标',
+  );
+
   const actions = el(
     'div',
     { class: 'doc-actions' },
-    el(
-      'button',
-      {
-        class: 'btn small',
-        onclick: async () => {
-          try {
-            await api.patch(`/api/documents/${doc.id}`, { starred: !doc.starred });
-            reload();
-          } catch (error) {
-            errorToast(error);
-          }
-        },
-      },
-      doc.starred ? '★ 取消星标' : '☆ 加星标',
-    ),
+    starButton,
     el('button', { class: 'btn small', onclick: () => editDialog(doc, reload) }, '编辑'),
     el('button', { class: 'btn small', onclick: () => regenerateDialog(doc, state.templates, () => (location.hash = '#/tasks')) }, '重新生成'),
     el('button', { class: 'btn small', onclick: () => assistDialog(doc, reload) }, 'AI 修改'),
@@ -446,7 +488,6 @@ export async function renderDoc(root, state, docId) {
           '恢复上一版',
         )
       : null,
-    el('div', { class: 'spacer' }),
     el(
       'button',
       {
