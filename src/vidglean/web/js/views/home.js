@@ -31,7 +31,7 @@ export function openImportPanel() {
   let parsed = [];
 
   const handle = modal({
-    title: '导入视频链接',
+    title: '导入链接',
     body: el(
       'div',
       {},
@@ -247,19 +247,6 @@ export async function renderHome(root, state, view) {
     );
   }
 
-  const cta = el(
-    'div',
-    { class: 'card import-panel' },
-    el(
-      'div',
-      { class: 'row' },
-      el('div', {}, el('div', { style: 'font-weight:600' }, '粘贴视频链接，生成 Markdown 知识文档'), el('div', { class: 'muted small' }, '支持 B 站视频页链接、b23.tv 短链与 BV 号')),
-      el('div', { class: 'spacer' }),
-      el('button', { class: 'btn primary', onclick: () => openImportPanel() }, '开始解析'),
-    ),
-  );
-  root.append(cta);
-
   const grid = el('div', { class: `doc-grid ${state.listMode === 'list' ? 'list' : ''}` });
   root.append(grid);
 
@@ -268,7 +255,11 @@ export async function renderHome(root, state, view) {
     head.querySelector('.muted').textContent = `共 ${data.total} 篇`;
     if (!data.items.length) {
       grid.append(
-        emptyState(state.q ? '没有匹配的文档' : '还没有文档，粘贴一个视频链接开始吧'),
+        emptyState(
+          state.q
+            ? '没有匹配的文档'
+            : '还没有文档，点右上角「导入链接」开始',
+        ),
       );
       return;
     }
