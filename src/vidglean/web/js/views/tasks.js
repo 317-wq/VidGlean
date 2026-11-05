@@ -71,7 +71,11 @@ export async function renderTasks(root, state) {
               toast(`已清理 ${result.removed} 条记录`);
               renderTasks(root, state);
             } catch (error) {
-              errorToast(error);
+              if (error.code === 'HTTP_405') {
+                toast('服务端还是旧版本，请重启 vidglean 后再试', 'error');
+              } else {
+                errorToast(error);
+              }
             }
           },
         },
@@ -88,6 +92,10 @@ export async function renderTasks(root, state) {
     root.append(el('div', { class: 'empty' }, error.message));
     return;
   }
+  // 服务端已过滤；这里再挡一层，避免旧进程把已完成的任务又带出来
+  data.items = showDone
+    ? data.items
+    : data.items.filter((task) => task.status !== 'succeeded' && task.status !== 'canceled');
   if (!data.items.length) {
     root.append(
       emptyState(showDone ? '还没有任务记录，先去导入一个视频吧' : '没有进行中的任务'),
