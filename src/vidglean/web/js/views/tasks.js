@@ -37,28 +37,61 @@ function stageBar(stages) {
   return el('div', { class: 'stage-bar' }, ...stages.map(stagePill));
 }
 
+let showDone = localStorage.getItem('vg-show-done') === '1';
+
 export async function renderTasks(root, state) {
   root.innerHTML = '';
+
+  const toggle = el('input', {
+    type: 'checkbox',
+    checked: showDone,
+    onchange: (event) => {
+      showDone = event.target.checked;
+      localStorage.setItem('vg-show-done', showDone ? '1' : '0');
+      renderTasks(root, state);
+    },
+  });
+
   root.append(
     el(
       'div',
       { class: 'page-head' },
       el('h1', {}, '任务'),
-      el('span', { class: 'muted small' }, '任务中断后不会自动恢复，需要手动重试'),
+      el('span', { class: 'muted small' }, '只显示还没结束的任务；完成后会从列表消失，文档在「全部文档」里'),
       el('div', { class: 'spacer' }),
+      el('label', { class: 'row small muted' }, toggle, '显示已完成'),
+      el(
+        'button',
+        {
+          class: 'btn small',
+          onclick: async () => {
+            if (!window.confirm('清空已完成和已取消的任务记录？文档不受影响。')) return;
+            try {
+              const result = await api.post('/api/tasks/cleanup', {});
+              toast(`已清理 ${result.removed} 条记录`);
+              renderTasks(root, state);
+            } catch (error) {
+              errorToast(error);
+            }
+          },
+        },
+        '清理已完成',
+      ),
       el('button', { class: 'btn small', onclick: () => renderTasks(root, state) }, '刷新'),
     ),
   );
 
   let data;
   try {
-    data = await api.get('/api/tasks?limit=100');
+    data = await api.get(`/api/tasks?limit=100&include_done=${showDone ? 'true' : 'false'}`);
   } catch (error) {
     root.append(el('div', { class: 'empty' }, error.message));
     return;
   }
   if (!data.items.length) {
-    root.append(emptyState('还没有任务，先去导入一个视频吧'));
+    root.append(
+      emptyState(showDone ? '还没有任务记录，先去导入一个视频吧' : '没有进行中的任务'),
+    );
     return;
   }
 
