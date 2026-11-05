@@ -195,11 +195,18 @@ function formatDuration(seconds) {
 }
 
 export async function renderHome(root, state, view) {
+  root.innerHTML = '';
   const starred = view === 'starred' || state.starred;
   const params = new URLSearchParams();
   if (state.q) params.set('q', state.q);
   if (starred) params.set('starred', 'true');
   if (state.category) params.set('category', state.category);
+
+  const setMode = (mode) => {
+    state.listMode = mode;
+    localStorage.setItem('vg-list-mode', mode);
+    renderHome(root, state, view);
+  };
 
   const head = el(
     'div',
@@ -208,16 +215,18 @@ export async function renderHome(root, state, view) {
     el('span', { class: 'muted small' }, '加载中…'),
     el('div', { class: 'spacer' }),
     el(
-      'button',
-      {
-        class: 'btn small',
-        onclick: () => {
-          state.listMode = state.listMode === 'grid' ? 'list' : 'grid';
-          localStorage.setItem('vg-list-mode', state.listMode);
-          renderHome(root, state, view);
-        },
-      },
-      state.listMode === 'grid' ? '列表视图' : '卡片视图',
+      'div',
+      { class: 'seg' },
+      el(
+        'button',
+        { class: state.listMode === 'grid' ? 'active' : '', onclick: () => setMode('grid') },
+        '卡片',
+      ),
+      el(
+        'button',
+        { class: state.listMode === 'list' ? 'active' : '', onclick: () => setMode('list') },
+        '列表',
+      ),
     ),
   );
   root.append(head);
