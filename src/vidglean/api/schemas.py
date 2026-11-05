@@ -68,6 +68,12 @@ class TemplateIn(BaseModel):
     content: str
 
 
+class TemplateUpdate(BaseModel):
+    content: str
+    name: str | None = None
+    description: str | None = None
+
+
 class ModelIn(BaseModel):
     name: str
     base_url: str
