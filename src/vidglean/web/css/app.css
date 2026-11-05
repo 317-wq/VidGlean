@@ -151,10 +151,30 @@ textarea {
   grid-template-columns: 64px 1fr;
 }
 
+.panel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.panel-btn:hover {
+  background: var(--panel-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
 .expand-btn {
   display: none;
-  font-size: 14px;
-  padding: 4px 8px;
 }
 
 #app.collapsed .expand-btn {
@@ -163,7 +183,6 @@ textarea {
 
 .collapse-btn {
   margin-left: auto;
-  font-size: 14px;
 }
 
 #app.collapsed .collapse-btn,
@@ -191,6 +210,11 @@ textarea {
 #app.collapsed .nav a {
   justify-content: center;
   padding: 10px 0;
+}
+
+#app.collapsed .nav-icon {
+  font-size: 16px;
+  opacity: 0.85;
 }
 
 .sidebar {
