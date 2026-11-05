@@ -57,6 +57,8 @@ uv run vidglean --serve --host 0.0.0.0 --port 8765
 | 独立 SSH 隧道 | `powershell -File scripts\forward.ps1` | 不开 VS Code 时用，保持窗口开着 |
 | 直接对外监听 | `uv run vidglean --serve --host 0.0.0.0` | 需用打印出来的 `192.168.x.x` 地址和 token |
 
+也可以直接绑定本机 IP，效果等同但更明确：`uv run vidglean --serve --host 192.168.107.128`（IP 变了要跟着改，`0.0.0.0` 不受影响）。
+
 三种方式都要求 Linux 上的服务保持在 `127.0.0.1:8765`（或对应端口）上运行。
 
 `.env` 只用于开发期方便，正式运行时 API Key 与 SESSDATA 保存在系统凭据管理器（Windows Credential Manager）。
