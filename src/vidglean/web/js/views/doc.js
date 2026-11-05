@@ -289,6 +289,9 @@ async function categoryDialog(doc, onDone) {
               }
               await api.patch(`/api/documents/${doc.id}`, { categories: ids });
               handle.close();
+              toast('已归类');
+              // 左侧分类列表与计数需要同步刷新
+              window.dispatchEvent(new CustomEvent('vg:categories-changed'));
               onDone();
             } catch (error) {
               errorToast(error);
@@ -401,6 +404,17 @@ export async function renderDoc(root, state, docId) {
   }
   const reload = () => renderDoc(root, state, docId);
 
+  let categoryNames = [];
+  if (doc.categories && doc.categories.length) {
+    try {
+      const all = await api.get('/api/categories');
+      const names = new Map(all.items.map((item) => [item.id, item.name]));
+      categoryNames = doc.categories.map((id) => names.get(id)).filter(Boolean);
+    } catch (error) {
+      categoryNames = [];
+    }
+  }
+
   const head = el(
     'div',
     { class: 'doc-head' },
@@ -423,6 +437,7 @@ export async function renderDoc(root, state, docId) {
         el('span', {}, formatDuration(doc.duration)),
         el('span', {}, doc.content_type || '其他'),
         el('span', {}, fmtDate(doc.created_at)),
+        categoryNames.length ? el('span', { class: 'badge' }, `分类：${categoryNames.join('、')}`) : null,
         doc.tags && doc.tags.length ? el('span', {}, doc.tags.join(' · ')) : null,
       ),
     ),
