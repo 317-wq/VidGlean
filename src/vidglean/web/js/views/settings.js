@@ -100,7 +100,7 @@ function modelDialog(existing, onSaved) {
   const model = el('input', { class: 'field', value: existing ? existing.model : '', placeholder: 'deepseek-chat' });
   const apiKey = el('input', { class: 'field', type: 'password', placeholder: existing ? '留空表示不修改' : 'API Key' });
   const temperature = el('input', { class: 'field', type: 'number', step: '0.1', min: '0', max: '2', value: existing ? existing.temperature : 0.5 });
-  const maxTokens = el('input', { class: 'field', type: 'number', value: existing ? existing.max_tokens : 4096 });
+  const maxTokens = el('input', { class: 'field', type: 'number', value: existing ? existing.max_tokens : 8192 });
   const timeout = el('input', { class: 'field', type: 'number', value: existing ? existing.timeout : 120 });
 
   const handle = modal({
