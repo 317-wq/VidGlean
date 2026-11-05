@@ -47,6 +47,18 @@ uv run vidglean --serve --port 8765   # 以 HTTP 服务方式启动，浏览器�
 uv run vidglean --serve --host 0.0.0.0 --port 8765
 ```
 
+### Linux 上跑、Windows 访问
+
+`127.0.0.1` 在两边指的是不同的机器，所以 Windows 浏览器直接访问 Linux 的 `127.0.0.1:8765` 必然连不上。三种做法：
+
+| 做法 | 命令 | 说明 |
+|---|---|---|
+| VS Code 端口转发 | 端口面板添加 `8765` | 最省事，跟着 Remote-SSH 走 |
+| 独立 SSH 隧道 | `powershell -File scripts\forward.ps1` | 不开 VS Code 时用，保持窗口开着 |
+| 直接对外监听 | `uv run vidglean --serve --host 0.0.0.0` | 需用打印出来的 `192.168.x.x` 地址和 token |
+
+三种方式都要求 Linux 上的服务保持在 `127.0.0.1:8765`（或对应端口）上运行。
+
 `.env` 只用于开发期方便，正式运行时 API Key 与 SESSDATA 保存在系统凭据管理器（Windows Credential Manager）。
 
 ## 开发
