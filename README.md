@@ -39,6 +39,14 @@ uv run vidglean --serve --port 8765   # 以 HTTP 服务方式启动，浏览器�
 
 以 `--serve` 启动时如果端口被占用，会自动往后找一个可用端口，并打印实际访问地址。
 
+默认只监听 `127.0.0.1`，别的机器访问不到。要从 Windows 打开，二选一：
+
+```bash
+# 1) 远程开发推荐：用 VS Code 的「端口」面板转发 8765，然后在 Windows 打开 http://127.0.0.1:8765
+# 2) 直接暴露到局域网（会自动生成访问令牌，必须带 token 访问）
+uv run vidglean --serve --host 0.0.0.0 --port 8765
+```
+
 `.env` 只用于开发期方便，正式运行时 API Key 与 SESSDATA 保存在系统凭据管理器（Windows Credential Manager）。
 
 ## 开发
