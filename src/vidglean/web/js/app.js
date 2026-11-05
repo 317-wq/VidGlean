@@ -203,12 +203,30 @@ function renderSideFooter() {
   const health = state.health || {};
   foot.append(
     el('div', {}, `版本 ${health.version || '-'}`),
-    el('div', {}, health.has_model ? '模型已配置' : '未配置模型'),
-    el('div', {}, health.has_bilibili ? 'B 站凭证已配置' : '未配置 B 站凭证'),
+    el(
+      'div',
+      { class: health.has_model ? '' : 'warn-text' },
+      health.has_model ? '模型已配置' : '未配置模型',
+    ),
+    el(
+      'div',
+      { class: health.has_bilibili ? '' : 'warn-text' },
+      health.has_bilibili ? 'B 站凭证已配置' : '未配置 B 站凭证',
+    ),
   );
 }
 
+export async function refreshHealth() {
+  try {
+    state.health = await api.get('/api/health');
+    renderSideFooter();
+  } catch (error) {
+    // 后端短暂不可用时不打扰用户
+  }
+}
+
 export async function render() {
+  refreshHealth();
   const { view, id } = parseHash();
   state.view = view;
   state.docId = id;
@@ -308,6 +326,21 @@ async function boot() {
   document.getElementById('splash').classList.add('hide');
   setTimeout(() => document.getElementById('splash').remove(), 400);
 
+  // 侧边栏折叠状态
+  const applySidebar = () => {
+    const collapsed = localStorage.getItem('vg-sidebar') === 'collapsed';
+    document.getElementById('app').classList.toggle('collapsed', collapsed);
+  };
+  document.getElementById('btn-collapse').addEventListener('click', () => {
+    localStorage.setItem('vg-sidebar', 'collapsed');
+    applySidebar();
+  });
+  document.getElementById('btn-expand').addEventListener('click', () => {
+    localStorage.setItem('vg-sidebar', 'open');
+    applySidebar();
+  });
+  applySidebar();
+
   searchEl.addEventListener(
     'input',
     debounce(() => {
@@ -343,6 +376,7 @@ async function boot() {
   window.addEventListener('hashchange', render);
   // 文档归类、分类增删都可能改到侧边栏，统一用一个事件刷新
   window.addEventListener('vg:categories-changed', () => loadCategories());
+  window.addEventListener('vg:health-changed', () => refreshHealth());
   if (!location.hash) location.hash = '#/home';
   await render();
 }
