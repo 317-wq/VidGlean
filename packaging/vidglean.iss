@@ -27,7 +27,8 @@ UninstallDisplayIcon={app}\{#AppExe}
 
 [Languages]
 ; 简体中文语言包随仓库提供（Inno Setup 自带语言里没有中文）
-Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
+; 路径相对 SourceDir（仓库根目录）
+Name: "chinesesimplified"; MessagesFile: "packaging\ChineseSimplified.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加任务:"
