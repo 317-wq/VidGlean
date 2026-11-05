@@ -111,7 +111,11 @@ export function openImportPanel() {
           'div',
           { class: 'preview-item' },
           item.cover_url
-            ? el('img', { src: item.cover_url, alt: item.title })
+            ? el('img', {
+                src: `/api/image?url=${encodeURIComponent(item.cover_url)}`,
+                alt: item.title,
+                loading: 'lazy',
+              })
             : el('div', { style: 'width:132px;height:78px;background:var(--panel-2);border-radius:6px' }),
           el(
             'div',
