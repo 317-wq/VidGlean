@@ -117,15 +117,12 @@ textarea {
 }
 
 .splash-logo {
-  width: 56px;
-  height: 56px;
+  display: block;
+  width: 96px;
+  height: 96px;
   margin: 0 auto 14px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fff;
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 56px;
+  object-fit: contain;
+  border-radius: 20px;
 }
 
 .splash-name {
@@ -146,6 +143,29 @@ textarea {
   display: grid;
   grid-template-columns: 220px 1fr;
   height: 100%;
+}
+
+#app.collapsed {
+  grid-template-columns: 0 1fr;
+}
+
+#app.collapsed .sidebar {
+  display: none;
+}
+
+.expand-btn {
+  display: none;
+  font-size: 14px;
+  padding: 4px 8px;
+}
+
+#app.collapsed .expand-btn {
+  display: inline-flex;
+}
+
+.collapse-btn {
+  margin-left: auto;
+  font-size: 14px;
 }
 
 .sidebar {
@@ -170,12 +190,8 @@ textarea {
 .brand-mark {
   width: 26px;
   height: 26px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fff;
-  text-align: center;
-  line-height: 26px;
-  font-size: 15px;
+  object-fit: contain;
+  flex: none;
 }
 
 .nav {
@@ -450,6 +466,10 @@ textarea.field {
 
 .muted {
   color: var(--muted);
+}
+
+.warn-text {
+  color: var(--warn);
 }
 
 .small {
