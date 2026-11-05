@@ -372,6 +372,49 @@ textarea {
   font-weight: 600;
 }
 
+.import-btn {
+  padding: 8px 18px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.cat-list li .cat-actions {
+  display: none;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.cat-list li:hover .cat-actions,
+.cat-list li.active .cat-actions {
+  display: flex;
+}
+
+.cat-list .cat-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-btn {
+  border: 0;
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.icon-btn:hover {
+  color: var(--accent);
+  background: var(--panel-2);
+}
+
+.icon-btn.danger:hover {
+  color: var(--danger);
+}
+
 input.field,
 select.field,
 textarea.field {
