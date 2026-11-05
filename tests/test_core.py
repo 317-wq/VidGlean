@@ -58,6 +58,15 @@ def test_builtin_templates_present():
     }
 
 
+def test_builtin_templates_shape():
+    assert len(templates_builtin.BUILTIN_TEMPLATES) == 9
+    for item in templates_builtin.BUILTIN_TEMPLATES:
+        body = item["content"]
+        assert body.startswith("# {{video_title}}"), item["id"]
+        assert "时间戳" not in body, item["id"]
+        assert templates_builtin.validate(body) == [], item["id"]
+
+
 def test_redact_secrets():
     text = "SESSDATA=abc123; Authorization: Bearer sk-abcdef123456"
     cleaned = redact(text)
