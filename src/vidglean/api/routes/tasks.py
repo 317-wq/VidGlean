@@ -32,9 +32,17 @@ def _task_payload(task_id: str) -> dict[str, Any]:
 
 
 @router.get("/tasks")
-async def list_tasks(status: str | None = None, limit: int = 100) -> dict[str, Any]:
-    tasks = repo.list_tasks(status=status, limit=limit)
+async def list_tasks(
+    status: str | None = None, limit: int = 100, include_done: bool = False
+) -> dict[str, Any]:
+    tasks = repo.list_tasks(status=status, limit=limit, include_done=include_done)
     return ok({"items": tasks})
+
+
+@router.post("/tasks/cleanup")
+async def cleanup_tasks() -> dict[str, Any]:
+    removed = repo.delete_finished_tasks()
+    return ok({"removed": removed})
 
 
 @router.get("/tasks/{task_id}")
