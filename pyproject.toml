@@ -3,6 +3,8 @@ name = "vidglean"
 version = "0.1.0"
 description = "本地 AI 视频总结桌面软件：把 B 站视频转成结构化 Markdown 知识文档。"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "ljt2", email = "3447794990@qq.com" }
 ]
