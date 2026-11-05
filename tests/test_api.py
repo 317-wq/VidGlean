@@ -157,3 +157,28 @@ def test_cleanup(client):
     _create_document()
     response = client.post("/api/system/cleanup")
     assert response.json()["ok"] is True
+
+
+def test_finished_tasks_hidden_and_cleanable(client):
+    doc_id = _create_document()
+    task_id = repo.create_task(
+        source_url="https://www.bilibili.com/video/BV1xx411c7mD", document_id=doc_id
+    )
+    repo.update_task(task_id, status="succeeded")
+
+    assert client.get("/api/tasks").json()["data"]["items"] == []
+    listed = client.get("/api/tasks?include_done=true").json()["data"]["items"]
+    assert len(listed) == 1
+
+    removed = client.post("/api/tasks/cleanup").json()["data"]["removed"]
+    assert removed == 1
+    assert client.get("/api/tasks?include_done=true").json()["data"]["items"] == []
+
+
+def test_delete_document_removes_related_tasks(client):
+    doc_id = _create_document()
+    task_id = repo.create_task(
+        source_url="https://www.bilibili.com/video/BV1xx411c7mD", document_id=doc_id
+    )
+    client.delete(f"/api/documents/{doc_id}")
+    assert client.get(f"/api/tasks/{task_id}").status_code == 404
