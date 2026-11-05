@@ -77,3 +77,24 @@ def test_fallback_terms_from_key_section():
 
     content = "## 关键名词\n- Reactor：事件驱动\n- epoll\n\n## 其他\n- 忽略"
     assert _fallback_terms(content, 5) == ["Reactor", "epoll"]
+
+
+def test_validate_summary_accepts_normal_document():
+    from vidglean.ai.summarize import validate_summary
+
+    body = "# 标题\n\n## 一句话概述\n内容\n\n## 核心内容\n**板块**\n- 要点"
+    assert validate_summary(body) == body
+
+
+def test_validate_summary_rejects_reasoning_text():
+    import pytest
+
+    from vidglean.ai.summarize import validate_summary
+    from vidglean.core.errors import AppError
+
+    with pytest.raises(AppError):
+        validate_summary("用户要求把视频字幕整理成文档，让我先想想……\n# 标题")
+    with pytest.raises(AppError):
+        validate_summary("字幕内容（已识别）：拒绝废话，用 DSH 你必须要看的八个插件")
+    with pytest.raises(AppError):
+        validate_summary("这份文档的内容如下，没有标题")
