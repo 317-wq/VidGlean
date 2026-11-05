@@ -16,6 +16,7 @@ from vidglean.api.routes import (
     chat,
     documents,
     events,
+    images,
     imports,
     system,
     tasks,
@@ -58,7 +59,7 @@ def create_app() -> FastAPI:
     async def token_guard(request: Request, call_next):
         token = app.state.token
         path = request.url.path
-        if token and path.startswith("/api/"):
+        if token and path.startswith("/api/") and not path.startswith("/api/image"):
             supplied = request.headers.get("X-VG-Token") or request.query_params.get("token")
             if supplied != token:
                 return JSONResponse(
@@ -85,7 +86,7 @@ def create_app() -> FastAPI:
             status_code=500,
         )
 
-    for module in (system, imports, tasks, documents, chat, config_routes, events):
+    for module in (system, imports, tasks, documents, chat, config_routes, events, images):
         app.include_router(module.router)
 
     if WEB_DIR.exists():
