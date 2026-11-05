@@ -105,6 +105,36 @@ def test_upload_template(client):
     assert bad.json()["error"]["code"] == "BAD_TEMPLATE"
 
 
+def test_template_view_and_edit(client):
+    detail = client.get("/api/templates/builtin-tech").json()["data"]
+    assert detail["content"].startswith("# {{video_title}}")
+    assert detail["kind"] == "builtin"
+
+    denied = client.put("/api/templates/builtin-tech", json={"content": "# {{video_title}}"})
+    assert denied.status_code == 400
+    assert denied.json()["error"]["code"] == "CONFLICT"
+
+    created = client.post(
+        "/api/templates",
+        json={"name": "可编辑模板", "description": "x", "content": "# {{video_title}}\n\n## 概述"},
+    ).json()["data"]
+    updated = client.put(
+        f"/api/templates/{created['id']}",
+        json={"content": "# {{video_title}}\n\n## 新章节", "name": "可编辑模板2"},
+    )
+    assert updated.status_code == 200
+    again = client.get(f"/api/templates/{created['id']}").json()["data"]
+    assert again["content"].endswith("## 新章节")
+    assert again["name"] == "可编辑模板2"
+
+    invalid = client.put(
+        f"/api/templates/{created['id']}",
+        json={"content": "# {{video_title}}\n{{nope}}"},
+    )
+    assert invalid.status_code == 400
+    assert invalid.json()["error"]["code"] == "BAD_TEMPLATE"
+
+
 def test_model_crud(client):
     created = client.post(
         "/api/models",
