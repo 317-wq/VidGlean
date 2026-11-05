@@ -23,6 +23,7 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+SetupIconFile=packaging\vidglean.ico
 UninstallDisplayIcon={app}\{#AppExe}
 
 [Languages]
