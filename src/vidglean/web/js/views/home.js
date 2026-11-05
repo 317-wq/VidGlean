@@ -240,6 +240,41 @@ export async function renderHome(root, state, view) {
   );
   root.append(head);
 
+  // 没配好就跑不起来，直接把缺什么摆在首页
+  if (state.health && (!state.health.has_model || !state.health.has_bilibili)) {
+    const missing = [];
+    if (!state.health.has_model) missing.push('AI 模型');
+    if (!state.health.has_bilibili) missing.push('B 站凭证（SESSDATA）');
+    root.append(
+      el(
+        'div',
+        { class: 'card import-panel', style: 'border-color:var(--accent)' },
+        el(
+          'div',
+          { class: 'row' },
+          el(
+            'div',
+            {},
+            el('div', { style: 'font-weight:600' }, `还差 ${missing.join('、')} 没配置`),
+            el(
+              'div',
+              { class: 'muted small' },
+              state.health.has_model
+                ? '没有 B 站凭证通常拿不到字幕。'
+                : '没有模型无法生成总结；B 站凭证用于获取字幕。',
+            ),
+          ),
+          el('div', { class: 'spacer' }),
+          el(
+            'button',
+            { class: 'btn primary', onclick: () => (location.hash = '#/settings') },
+            '去配置',
+          ),
+        ),
+      ),
+    );
+  }
+
   if (state.health && state.health.interrupted > 0) {
     root.append(
       el(
