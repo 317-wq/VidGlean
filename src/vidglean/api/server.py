@@ -62,7 +62,13 @@ def create_app() -> FastAPI:
             supplied = request.headers.get("X-VG-Token") or request.query_params.get("token")
             if supplied != token:
                 return JSONResponse(
-                    {"ok": False, "error": {"code": "FORBIDDEN", "message": "非法请求"}},
+                    {
+                        "ok": False,
+                        "error": {
+                            "code": "FORBIDDEN",
+                            "message": "缺少或错误的访问令牌，请使用启动时打印的完整地址（带 token 参数）",
+                        },
+                    },
                     status_code=403,
                 )
         return await call_next(request)
