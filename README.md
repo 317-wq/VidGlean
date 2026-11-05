@@ -108,3 +108,10 @@ git tag v0.1.1 && git push origin v0.1.1
 - 费用统计只累计 Token，未内置各厂商价格表，金额记 0
 - 代码未签名，安装包会触发 SmartScreen 提示
 - 第一版只支持 Bilibili，抖音、本地视频、ASR、时间戳均在后续规划内
+
+## 许可证
+
+[MIT](LICENSE) © 2026 317-wq
+
+内置的 KaTeX（公式渲染）遵循其自身的 MIT 许可，其他第三方依赖见各自的开源许可。
+
