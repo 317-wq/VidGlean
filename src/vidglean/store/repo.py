@@ -625,7 +625,7 @@ def create_model(**fields: Any) -> str:
             fields["base_url"],
             fields["model"],
             float(fields.get("temperature", 0.5)),
-            int(fields.get("max_tokens", 4096)),
+            int(fields.get("max_tokens", 8192)),
             int(fields.get("timeout", 120)),
             0,
             now_iso(),
