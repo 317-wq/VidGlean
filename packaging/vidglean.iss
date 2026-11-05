@@ -7,6 +7,8 @@
 #define AppExe "VidGlean.exe"
 
 [Setup]
+; 相对路径按仓库根目录解析（脚本在 packaging/ 下）
+SourceDir=..
 AppId={{8A7F31B4-6F2E-4C1B-9D2A-3E5C7B9A1D42}
 AppName={#AppName}
 AppVersion={#AppVersion}
@@ -14,6 +16,7 @@ AppPublisher=VidGlean
 DefaultDirName={autopf}\VidGlean
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
+OutputDir=..\dist
 OutputBaseFilename=VidGlean-{#AppVersion}-setup
 Compression=lzma2
 SolidCompression=yes
