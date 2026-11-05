@@ -357,7 +357,7 @@ function openChat(doc) {
 
   send.addEventListener('click', submit);
   input.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
       submit();
     }
