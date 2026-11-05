@@ -1,0 +1,63 @@
+[project]
+name = "vidglean"
+version = "0.1.0"
+description = "本地 AI 视频总结桌面软件：把 B 站视频转成结构化 Markdown 知识文档。"
+readme = "README.md"
+authors = [
+    { name = "ljt2", email = "3447794990@qq.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    # 平台解析
+    "bilibili-api-python>=17.4.2",
+    "curl-cffi>=0.17.0",
+    # 后端服务
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "python-dotenv>=1.2.4",
+    # AI
+    "openai>=3.46.0",
+    # 本地存储与安全
+    "keyring>=25.0",
+    "cryptography>=42.0",
+    "send2trash>=1.8",
+    # Markdown 渲染
+    "markdown>=3.11.2",
+    "pygments>=2.18",
+    # 供 main.py 冒烟脚本使用
+    "httpx>=0.28.1",
+]
+
+[project.optional-dependencies]
+# 桌面壳只在打包/桌面运行时需要；Linux 开发机不装，避免拉 GTK/Qt 依赖。
+desktop = ["pywebview>=5.0"]
+# 仅 Windows 打包机上需要。
+build = ["pyinstaller>=6.6"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.7",
+]
+
+[project.scripts]
+vidglean = "vidglean:main"
+
+[build-system]
+requires = ["uv_build>=0.13.1,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["src/vidglean/web/vendor"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
