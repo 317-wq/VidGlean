@@ -52,6 +52,83 @@ export async function loadCategories() {
   }
 }
 
+function selectCategory(categoryId) {
+  state.category = state.category === categoryId ? null : categoryId;
+  state.q = '';
+  searchEl.value = '';
+  if (parseHash().view !== 'home' && parseHash().view !== 'starred') {
+    location.hash = '#/home';
+  } else {
+    render();
+  }
+}
+
+function nameDialog({ title, value = '', okText, onSubmit }) {
+  const input = el('input', { class: 'field', value, placeholder: '分类名称' });
+  const submit = async () => {
+    const name = input.value.trim();
+    if (!name) {
+      input.focus();
+      return;
+    }
+    try {
+      await onSubmit(name);
+      handle.close();
+    } catch (error) {
+      errorToast(error);
+    }
+  };
+  const handle = modal({
+    title,
+    width: '420px',
+    body: input,
+    footer: [
+      el('button', { class: 'btn', onclick: () => handle.close() }, '取消'),
+      el('button', { class: 'btn primary', onclick: submit }, okText),
+    ],
+  });
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.isComposing) {
+      event.preventDefault();
+      submit();
+    }
+  });
+  setTimeout(() => {
+    input.focus();
+    input.select();
+  }, 30);
+}
+
+async function renameCategory(category) {
+  nameDialog({
+    title: '重命名分类',
+    value: category.name,
+    okText: '保存',
+    onSubmit: async (name) => {
+      await api.patch(`/api/categories/${category.id}`, { name });
+      await loadCategories();
+      toast('已重命名');
+    },
+  });
+}
+
+async function deleteCategory(category) {
+  const confirmed = await confirmDialog(
+    `删除分类「${category.name}」？只会解除文档与它的关联，文档不会被删除。`,
+    { okText: '删除', danger: true },
+  );
+  if (!confirmed) return;
+  try {
+    await api.del(`/api/categories/${category.id}`);
+    if (state.category === category.id) state.category = null;
+    await loadCategories();
+    toast('分类已删除');
+    render();
+  } catch (error) {
+    errorToast(error);
+  }
+}
+
 function renderSidebarCategories() {
   const list = document.getElementById('cat-list');
   list.innerHTML = '';
@@ -60,18 +137,37 @@ function renderSidebarCategories() {
       'li',
       {
         class: state.category === category.id ? 'active' : '',
-        onclick: () => {
-          state.category = state.category === category.id ? null : category.id;
-          state.q = '';
-          searchEl.value = '';
-          if (parseHash().view !== 'home' && parseHash().view !== 'starred') {
-            location.hash = '#/home';
-          } else {
-            render();
-          }
-        },
+        onclick: () => selectCategory(category.id),
       },
-      el('span', {}, category.name),
+      el('span', { class: 'cat-name' }, category.name),
+      el(
+        'span',
+        { class: 'cat-actions' },
+        el(
+          'button',
+          {
+            class: 'icon-btn',
+            title: '重命名',
+            onclick: (event) => {
+              event.stopPropagation();
+              renameCategory(category);
+            },
+          },
+          '✎',
+        ),
+        el(
+          'button',
+          {
+            class: 'icon-btn danger',
+            title: '删除',
+            onclick: (event) => {
+              event.stopPropagation();
+              deleteCategory(category);
+            },
+          },
+          '✕',
+        ),
+      ),
       el('span', { class: 'count' }, String(category.count || 0)),
     );
     list.append(item);
@@ -231,35 +327,15 @@ async function boot() {
   });
 
   document.getElementById('new-cat').addEventListener('click', () => {
-    const input = el('input', { class: 'field', placeholder: '分类名称' });
-    const handle = modal({
+    nameDialog({
       title: '新建分类',
-      width: '420px',
-      body: input,
-      footer: [
-        el('button', { class: 'btn', onclick: () => handle.close() }, '取消'),
-        el(
-          'button',
-          {
-            class: 'btn primary',
-            onclick: async () => {
-              const name = input.value.trim();
-              if (!name) return;
-              try {
-                await api.post('/api/categories', { name });
-                handle.close();
-                await loadCategories();
-                toast('分类已创建');
-              } catch (error) {
-                errorToast(error);
-              }
-            },
-          },
-          '创建',
-        ),
-      ],
+      okText: '创建',
+      onSubmit: async (name) => {
+        await api.post('/api/categories', { name });
+        await loadCategories();
+        toast('分类已创建');
+      },
     });
-    setTimeout(() => input.focus(), 30);
   });
 
   wireShortcuts();
