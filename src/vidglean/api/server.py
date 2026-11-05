@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -30,7 +31,16 @@ from vidglean.store import db
 
 _log = logging.getLogger(__name__)
 
-WEB_DIR = Path(__file__).resolve().parent.parent / "web"
+
+def _web_dir() -> Path:
+    """打包成 exe 后前端资源在 _MEIPASS/vidglean/web，开发态在源码目录。"""
+    if getattr(sys, "frozen", False):
+        base = Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
+        return base / "vidglean" / "web"
+    return Path(__file__).resolve().parent.parent / "web"
+
+
+WEB_DIR = _web_dir()
 
 
 @asynccontextmanager
