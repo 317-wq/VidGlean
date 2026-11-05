@@ -99,11 +99,13 @@ def serve(host: str = "127.0.0.1", port: int = 8765, token: str = "") -> None:
         print(f"端口 {requested} 已被占用，改用 {port}")
 
     loopback = host in LOOPBACK_HOSTS
+    generated = False
     if not token:
         token = os.environ.get("VIDGLEAN_TOKEN", "")
     if not loopback and not token:
         # 对外开放时强制要求令牌，避免局域网内任何人都能读写数据
         token = uuid.uuid4().hex
+        generated = True
     if token:
         os.environ["VIDGLEAN_TOKEN"] = token
 
@@ -114,13 +116,16 @@ def serve(host: str = "127.0.0.1", port: int = 8765, token: str = "") -> None:
         print("当前只监听本机回环地址，别的机器访问会被拒绝。")
         print("要从 Windows 打开，两种办法：")
         print(f"  1) 用 VS Code 的「端口」面板转发 {port}，然后在 Windows 打开 http://127.0.0.1:{port}")
-        print(f"  2) 加 --host 0.0.0.0 重启（会生成访问令牌），再用 http://<本机IP>:{port} 打开")
+        print(f"  2) 用 --host 0.0.0.0（或 --host <本机IP>）重启，再用 http://<本机IP>:{port} 打开")
     else:
         ip = _lan_ip()
         if ip:
             print(f"局域网访问：http://{ip}:{port}{query}")
         if token:
-            print("已生成访问令牌，必须带 token 参数访问；换了端口或重启令牌会变。")
+            if generated:
+                print("已生成访问令牌，必须带 token 参数访问；重启会换新令牌，可用 --token 固定。")
+            else:
+                print("已启用访问令牌，必须带 token 参数访问。")
 
     try:
         _run_uvicorn(host, port)
