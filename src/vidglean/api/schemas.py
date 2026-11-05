@@ -74,7 +74,7 @@ class ModelIn(BaseModel):
     model: str
     api_key: str = ""
     temperature: float = 0.5
-    max_tokens: int = 4096
+    max_tokens: int = 8192
     timeout: int = 120
 
 
