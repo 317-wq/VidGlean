@@ -20,7 +20,11 @@ router = APIRouter(prefix="/api")
 
 RECOMMEND = {
     ContentType.TECH: "builtin-tech",
+    ContentType.SCIENCE: "builtin-science",
+    ContentType.EXPERIENCE: "builtin-experience",
     ContentType.OPINION: "builtin-opinion",
+    ContentType.LIFE: "builtin-life",
+    ContentType.FUN: "builtin-fun",
 }
 
 _SEM = asyncio.Semaphore(3)
