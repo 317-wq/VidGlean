@@ -89,15 +89,41 @@ async def summarize(
     )
     prompt_tokens += usage["prompt_tokens"]
     completion_tokens += usage["completion_tokens"]
-    text = strip_code_fence(text)
-    if not text:
-        raise AppError("API_ERROR", "模型返回了空内容")
+    text = validate_summary(strip_code_fence(text))
     return SummaryResult(
         text=text,
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
         chunks=len(chunks),
     )
+
+
+_REASONING_MARKERS = (
+    "字幕内容（已识别）",
+    "让我先",
+    "我需要确认",
+    "我需要先",
+    "用户要求",
+    "好的，",
+)
+
+
+def validate_summary(text: str) -> str:
+    """挡掉把思考过程、字幕原文当正文返回的情况。"""
+    body = (text or "").strip()
+    if not body:
+        raise AppError("API_ERROR", "模型返回了空内容")
+    first_line = body.splitlines()[0].strip()
+    if not first_line.startswith("# "):
+        raise AppError(
+            "API_ERROR", "模型没有按模板输出（缺少一级标题），已丢弃本次结果", retriable=True
+        )
+    head = body[:300]
+    if any(marker in head for marker in _REASONING_MARKERS):
+        raise AppError(
+            "API_ERROR", "模型输出了思考过程或字幕原文，已丢弃本次结果", retriable=True
+        )
+    return body
 
 
 _TAG_SPLIT = re.compile(r"[,，、;；\n/|]+")
