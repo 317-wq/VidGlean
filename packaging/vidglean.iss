@@ -16,7 +16,7 @@ AppPublisher=VidGlean
 DefaultDirName={autopf}\VidGlean
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
-OutputDir=..\dist
+OutputDir=dist
 OutputBaseFilename=VidGlean-{#AppVersion}-setup
 Compression=lzma2
 SolidCompression=yes
@@ -45,27 +45,18 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 Filename: "{app}\{#AppExe}"; Description: "启动 {#AppName}"; Flags: nowait postinstall skipifsilent
 
 [Code]
-var
-  RemoveData: Boolean;
-  DataDir: String;
-
 function GetDataDir(Param: String): String;
 begin
   Result := ExpandConstant('{localappdata}\VidGlean');
 end;
 
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if CurStep = ssPostInstall then
-  begin
-    DataDir := GetDataDir('');
-  end;
-end;
-
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  DataDir: String;
 begin
   if CurUninstallStep = usPostUninstall then
   begin
+    DataDir := GetDataDir('');
     // 卸载时询问是否删除用户数据；默认保留
     if DirExists(DataDir) then
     begin
