@@ -256,6 +256,12 @@ def delete_document(doc_id: str) -> None:
         "doc_versions",
     ):
         db.execute(f"DELETE FROM {table} WHERE document_id = ?", (doc_id,))
+    # 文档没了，挂在它上面的任务记录也不再有意义
+    db.execute(
+        "DELETE FROM task_stages WHERE task_id IN (SELECT id FROM tasks WHERE document_id = ?)",
+        (doc_id,),
+    )
+    db.execute("DELETE FROM tasks WHERE document_id = ?", (doc_id,))
     db.execute("DELETE FROM documents_fts WHERE doc_id = ?", (doc_id,))
     db.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
 
@@ -483,23 +489,37 @@ def get_task(task_id: str) -> dict[str, Any] | None:
     return task
 
 
-def list_tasks(status: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+def list_tasks(
+    status: str | None = None, limit: int = 100, include_done: bool = False
+) -> list[dict[str, Any]]:
+    clauses: list[str] = []
+    params: list[Any] = []
     if status:
-        rows = db.query_all(
-            "SELECT t.*, d.title AS document_title FROM tasks t LEFT JOIN documents d ON d.id = t.document_id "
-            "WHERE t.status = ? ORDER BY t.created_at DESC LIMIT ?",
-            (status, limit),
-        )
-    else:
-        rows = db.query_all(
-            "SELECT t.*, d.title AS document_title FROM tasks t LEFT JOIN documents d ON d.id = t.document_id "
-            "ORDER BY t.created_at DESC LIMIT ?",
-            (limit,),
-        )
+        clauses.append("t.status = ?")
+        params.append(status)
+    elif not include_done:
+        # 默认只列还有事的任务；已完成/已取消不再占版面
+        clauses.append("t.status NOT IN ('succeeded', 'canceled')")
+    where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+    rows = db.query_all(
+        "SELECT t.*, d.title AS document_title FROM tasks t "
+        f"LEFT JOIN documents d ON d.id = t.document_id{where} "
+        "ORDER BY t.created_at DESC LIMIT ?",
+        (*params, limit),
+    )
     tasks = _rows(rows)
     for task in tasks:
         task["options"] = json.loads(task.get("options") or "{}")
     return tasks
+
+
+def delete_finished_tasks() -> int:
+    """清掉已完成/已取消的任务记录，返回删除条数。"""
+    rows = db.query_all("SELECT id FROM tasks WHERE status IN ('succeeded', 'canceled')")
+    for row in rows:
+        db.execute("DELETE FROM task_stages WHERE task_id = ?", (row["id"],))
+        db.execute("DELETE FROM tasks WHERE id = ?", (row["id"],))
+    return len(rows)
 
 
 def set_stage(
