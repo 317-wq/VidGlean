@@ -697,6 +697,15 @@ def delete_template(template_id: str) -> None:
     db.execute("DELETE FROM templates WHERE id = ?", (template_id,))
 
 
+def update_template(template_id: str, **fields: Any) -> None:
+    allowed = {"name", "description", "path"}
+    updates = {key: value for key, value in fields.items() if key in allowed}
+    if not updates:
+        return
+    assignments = ", ".join(f"{key} = ?" for key in updates)
+    db.execute(f"UPDATE templates SET {assignments} WHERE id = ?", (*updates.values(), template_id))
+
+
 # ---------------------------------------------------------------- 用量
 
 
