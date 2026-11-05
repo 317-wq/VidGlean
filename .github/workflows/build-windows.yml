@@ -53,3 +53,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/VidGlean-*-setup.exe
+          body: |
+            Windows 10 / 11 安装包。
+
+            **安装说明**
+
+            - 未做代码签名，首次运行时 Windows 可能拦截：点「更多信息」→「仍要运行」
+            - 需要 WebView2 Runtime：Windows 11 自带；Windows 10 缺失时窗口会白屏，装一次 Evergreen Runtime 即可
+            - 数据默认保存在 `%LOCALAPPDATA%\VidGlean`，卸载时会询问是否一并删除
+            - 启动失败请查看 `%LOCALAPPDATA%\VidGlean\logs\startup-error.log`
+
+            **首次使用**
+
+            打开「设置」→ 添加 OpenAI 兼容模型（Base URL / 模型名 / API Key）；再到「B 站」页填入 SESSDATA。
+
