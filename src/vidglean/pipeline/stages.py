@@ -162,10 +162,13 @@ def _document_header(meta: dict[str, Any]) -> str:
     author = meta.get("author", "")
     duration = meta.get("duration_text", "")
     content_type = meta.get("content_type", "")
+    stamp = now_iso().replace("T", " ")[:16]
+    # 两段 blockquote：第一行标题，第二行元信息，避免长标题把整块挤成一团
     return (
         f"> **视频**：[{title}]({url})\n"
-        f"> **UP 主**：{author}　**平台**：Bilibili　**时长**：{duration}　**类型**：{content_type}\n"
-        f"> **生成时间**：{now_iso().replace('T', ' ')}\n\n---\n\n"
+        f">\n"
+        f"> **UP 主**：{author}　**平台**：Bilibili　**时长**：{duration}　"
+        f"**类型**：{content_type}　**生成时间**：{stamp}\n\n---\n\n"
     )
 
 
