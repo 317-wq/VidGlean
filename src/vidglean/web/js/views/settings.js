@@ -255,13 +255,14 @@ async function templatesTab() {
   const data = await api.get('/api/templates');
   const list = el('div', {});
   for (const item of data.items) {
+    const open = () => templateDialog(item, rerender).catch(errorToast);
     list.append(
       el(
         'div',
         { class: 'template-row' },
         el(
           'div',
-          { style: 'flex:1;min-width:0' },
+          { style: 'flex:1;min-width:0;cursor:pointer', onclick: open, title: '查看/编辑模板' },
           el(
             'div',
             { class: 'name' },
@@ -274,6 +275,7 @@ async function templatesTab() {
         el(
           'div',
           { class: 'row' },
+          el('button', { class: 'btn small', onclick: open }, item.kind === 'builtin' ? '查看' : '编辑'),
           item.is_default
             ? null
             : el(
@@ -325,6 +327,89 @@ async function templatesTab() {
     renderSettings(document.getElementById('view'), null, 'templates');
   }
   return container;
+}
+
+async function templateDialog(item, onDone) {
+  let detail;
+  try {
+    detail = await api.get(`/api/templates/${item.id}`);
+  } catch (error) {
+    errorToast(error);
+    return;
+  }
+  const builtin = detail.kind === 'builtin';
+  const nameInput = el('input', {
+    class: 'field',
+    value: builtin ? `${detail.name} 副本` : detail.name,
+  });
+  const descInput = el('input', { class: 'field', value: detail.description || '' });
+  const textarea = el('textarea', { class: 'field code', rows: '18', value: detail.content });
+
+  const handle = modal({
+    title: `模板：${detail.name}`,
+    width: '860px',
+    body: el(
+      'div',
+      {},
+      el(
+        'div',
+        { class: 'muted small', style: 'margin-bottom:10px' },
+        builtin
+          ? '内置模板只读；修改后保存会另存为一份自定义模板。'
+          : '修改后立即生效，之后新生成的文档使用新结构；已有文档不受影响。',
+      ),
+      el(
+        'div',
+        { class: 'row', style: 'gap:8px;margin-bottom:10px' },
+        el('div', { style: 'flex:1' }, el('div', { class: 'muted small' }, '名称'), nameInput),
+        el('div', { style: 'flex:2' }, el('div', { class: 'muted small' }, '说明'), descInput),
+      ),
+      textarea,
+      el(
+        'div',
+        { class: 'muted small', style: 'margin-top:8px' },
+        '可用变量：{{video_title}} {{author}} {{platform}} {{url}} {{duration}} {{date}} {{content_type}} {{extra}} {{depth}}',
+      ),
+    ),
+    footer: [
+      el('button', { class: 'btn', onclick: () => handle.close() }, '关闭'),
+      el(
+        'button',
+        {
+          class: 'btn primary',
+          onclick: async () => {
+            const name = nameInput.value.trim();
+            if (!name) {
+              nameInput.focus();
+              return;
+            }
+            try {
+              if (builtin) {
+                await api.post('/api/templates', {
+                  name,
+                  description: descInput.value.trim(),
+                  content: textarea.value,
+                });
+                toast('已另存为自定义模板');
+              } else {
+                await api.put(`/api/templates/${item.id}`, {
+                  content: textarea.value,
+                  name,
+                  description: descInput.value.trim(),
+                });
+                toast('模板已保存');
+              }
+              handle.close();
+              onDone();
+            } catch (error) {
+              errorToast(error);
+            }
+          },
+        },
+        builtin ? '另存为副本' : '保存',
+      ),
+    ],
+  });
 }
 
 function uploadTemplate() {
