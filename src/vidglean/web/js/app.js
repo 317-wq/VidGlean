@@ -341,6 +341,8 @@ async function boot() {
   wireShortcuts();
   wireEvents();
   window.addEventListener('hashchange', render);
+  // 文档归类、分类增删都可能改到侧边栏，统一用一个事件刷新
+  window.addEventListener('vg:categories-changed', () => loadCategories());
   if (!location.hash) location.hash = '#/home';
   await render();
 }
