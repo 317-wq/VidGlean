@@ -144,8 +144,16 @@ class TaskEngine:
             await self._execute(task_id)
         except asyncio.CancelledError:
             task = repo.get_task(task_id)
-            if task and task["status"] not in (TaskStatus.CANCELED, TaskStatus.PAUSED):
-                repo.update_task(task_id, status=TaskStatus.CANCELED)
+            if task:
+                stage = task.get("current_stage") or ""
+                if stage:
+                    row = next(
+                        (item for item in repo.get_stages(task_id) if item["stage"] == stage), None
+                    )
+                    if row and row["status"] == StageStatus.RUNNING:
+                        repo.set_stage(task_id, stage, StageStatus.SKIPPED)
+                if task["status"] not in (TaskStatus.CANCELED, TaskStatus.PAUSED):
+                    repo.update_task(task_id, status=TaskStatus.CANCELED)
             raise
         except Exception as exc:  # pragma: no cover - 兜底
             _log.exception("任务执行异常 %s", task_id)
