@@ -95,24 +95,41 @@ async def complete(
     *,
     temperature: float | None = None,
     max_tokens: int | None = None,
-    allow_reasoning_fallback: bool = True,
 ) -> tuple[str, dict[str, int]]:
+    """取模型正文。
+
+    推理模型有时会把 token 预算全花在 reasoning 上，正文为空。这种情况绝不把
+    reasoning 当正文返回（那会把思考过程写进文档），而是加大预算重试一次。
+    """
     client = build(model)
-    try:
-        async with semaphore():
-            response = await client.chat.completions.create(
-                model=model["model"],
-                messages=messages,
-                temperature=model.get("temperature", 0.5) if temperature is None else temperature,
-                max_tokens=max_tokens or int(model.get("max_tokens") or 4096),
-            )
-    except Exception as exc:
-        raise translate(exc) from exc
-    choice = response.choices[0]
-    content = (choice.message.content or "").strip()
-    if not content and allow_reasoning_fallback:
-        content = (getattr(choice.message, "reasoning_content", "") or "").strip()
-    return content, _usage_of(response)
+    budget = max_tokens or int(model.get("max_tokens") or 4096)
+    temperature_value = model.get("temperature", 0.5) if temperature is None else temperature
+    usage: dict[str, int] = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+    for attempt in range(2):
+        try:
+            async with semaphore():
+                response = await client.chat.completions.create(
+                    model=model["model"],
+                    messages=messages,
+                    temperature=temperature_value,
+                    max_tokens=budget,
+                )
+        except Exception as exc:
+            raise translate(exc) from exc
+        usage = _usage_of(response)
+        choice = response.choices[0]
+        content = (choice.message.content or "").strip()
+        if content:
+            return content, usage
+        reasoning = (getattr(choice.message, "reasoning_content", "") or "").strip()
+        if reasoning and attempt == 0 and budget < 16000:
+            budget = min(budget * 3, 16000)
+            continue
+        break
+    raise AppError(
+        "API_ERROR",
+        "模型只返回了推理过程，没有给出正文；可在设置里调大该模型的 Max Tokens",
+    )
 
 
 async def stream(
