@@ -366,6 +366,7 @@ function openChat(doc) {
 }
 
 export async function renderDoc(root, state, docId) {
+  root.innerHTML = '';
   let doc;
   try {
     doc = await api.get(`/api/documents/${docId}`);
