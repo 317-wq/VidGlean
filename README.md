@@ -37,6 +37,8 @@ uv run vidglean --serve --port 8765   # 以 HTTP 服务方式启动，浏览器�
 
 首次启动后进入「设置」：添加一个 OpenAI 兼容模型（Base URL、模型名、API Key），并在「B 站」页填入 SESSDATA。
 
+以 `--serve` 启动时如果端口被占用，会自动往后找一个可用端口，并打印实际访问地址。
+
 `.env` 只用于开发期方便，正式运行时 API Key 与 SESSDATA 保存在系统凭据管理器（Windows Credential Manager）。
 
 ## 开发

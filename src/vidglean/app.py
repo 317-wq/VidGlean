@@ -55,10 +55,43 @@ def _run_uvicorn(host: str, port: int) -> None:
     _server.run()
 
 
+def _port_available(host: str, port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind((host, port))
+        except OSError:
+            return False
+    return True
+
+
+def _pick_port(host: str, preferred: int, span: int = 20) -> tuple[int, bool]:
+    """返回可用端口；端口被占用时依次向后找，找不到就用随机端口。"""
+    if preferred and _port_available(host, preferred):
+        return preferred, False
+    for offset in range(1, span + 1):
+        candidate = preferred + offset
+        if _port_available(host, candidate):
+            return candidate, True
+    return _free_port(), True
+
+
 def serve(host: str = "127.0.0.1", port: int = 8765, token: str = "") -> None:
+    requested = port
+    if requested <= 0:
+        port, changed = _free_port(), False
+    else:
+        port, changed = _pick_port(host, requested)
+    if changed:
+        print(f"端口 {requested} 已被占用，改用 {port}")
     if token:
         os.environ["VIDGLEAN_TOKEN"] = token
-    _run_uvicorn(host, port)
+    print(f"VidGlean 已启动：http://{host}:{port}   按 Ctrl+C 退出")
+    try:
+        _run_uvicorn(host, port)
+    except SystemExit:
+        print(f"启动失败：无法绑定端口 {port}，请换一个端口重试。")
+        raise SystemExit(1) from None
 
 
 def run_desktop() -> int:
