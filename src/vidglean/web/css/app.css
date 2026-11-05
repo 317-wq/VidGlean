@@ -850,6 +850,7 @@ textarea.field {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  table-layout: auto;
 }
 
 .task-table th,
@@ -858,6 +859,7 @@ textarea.field {
   padding: 10px 12px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .task-table th {
@@ -866,14 +868,38 @@ textarea.field {
   font-size: 12px;
 }
 
+.task-table td.task-name {
+  max-width: 520px;
+  white-space: normal;
+}
+
+.task-table td.task-name a,
+.task-table td.task-name > span {
+  display: block;
+  max-width: 520px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-table td.task-name .muted {
+  margin-top: 2px;
+}
+
+.row.nowrap {
+  flex-wrap: nowrap;
+}
+
 .stage-bar {
   display: flex;
   gap: 4px;
+  flex-wrap: nowrap;
 }
 
 .stage-pill {
   padding: 2px 8px;
   border-radius: 999px;
+  white-space: nowrap;
   font-size: 11px;
   background: var(--panel-2);
   color: var(--faint);
