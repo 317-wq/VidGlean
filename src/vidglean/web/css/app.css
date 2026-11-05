@@ -89,6 +89,11 @@ textarea {
   color: inherit;
 }
 
+/* hidden 属性必须压过组件自身的 display，否则 flex/grid 会把元素显示出来 */
+[hidden] {
+  display: none !important;
+}
+
 /* ---------------------------------------------------------------- 启动页 */
 
 #splash {
