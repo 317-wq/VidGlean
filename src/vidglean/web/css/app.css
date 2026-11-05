@@ -143,14 +143,12 @@ textarea {
   display: grid;
   grid-template-columns: 220px 1fr;
   height: 100%;
+  transition: grid-template-columns 0.16s ease;
 }
 
+/* 收起后变成窄条，只留图标 */
 #app.collapsed {
-  grid-template-columns: 0 1fr;
-}
-
-#app.collapsed .sidebar {
-  display: none;
+  grid-template-columns: 64px 1fr;
 }
 
 .expand-btn {
@@ -166,6 +164,33 @@ textarea {
 .collapse-btn {
   margin-left: auto;
   font-size: 14px;
+}
+
+#app.collapsed .collapse-btn,
+#app.collapsed .brand-name,
+#app.collapsed .side-section,
+#app.collapsed .side-foot,
+#app.collapsed .nav-label {
+  display: none;
+}
+
+#app.collapsed .sidebar {
+  padding: 18px 8px;
+  align-items: center;
+}
+
+#app.collapsed .brand {
+  justify-content: center;
+  padding: 2px 0;
+}
+
+#app.collapsed .nav {
+  width: 100%;
+}
+
+#app.collapsed .nav a {
+  justify-content: center;
+  padding: 10px 0;
 }
 
 .sidebar {
@@ -201,11 +226,26 @@ textarea {
 }
 
 .nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 9px 10px;
   border-radius: var(--radius-sm);
   color: var(--text);
   text-decoration: none;
   font-size: 14px;
+}
+
+.nav-icon {
+  width: 18px;
+  text-align: center;
+  opacity: 0.7;
+  font-size: 13px;
+  flex: none;
+}
+
+.nav a.active .nav-icon {
+  opacity: 1;
 }
 
 .nav a:hover {
